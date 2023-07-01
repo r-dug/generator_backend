@@ -10,7 +10,7 @@ const express = require('express')
 const path = require('path');
 const session = require('express-session')
 const cors = require('cors')
-const app = express()
+
 const {MongoClient, ServerApiVersion, ObjectId} = require('mongodb')
 const bodyParser = require('body-parser')
 const bcrypt = require('bcrypt')
@@ -18,9 +18,10 @@ const { Server } = require('ws');
 const wss = new Server({ server });
 const morgan = require('morgan');
 
-app.use(cors())
-app.use(morgan('tiny'));
-app.use(express.static(path.join(__dirname, 'build')))
+const app = express()
+    .use(cors())
+    .use(morgan('tiny'))
+    .use(express.static(path.join(__dirname, 'build')))
 
 // app.use(
 //     session({
