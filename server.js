@@ -25,7 +25,7 @@ const wss = new Server({ server });
 const app = express()
     .use(cors())
     .use(morgan('tiny'))
-    .listen(EXPRESS_PORT, () => console.log(`Listening on ${PORT}`));
+
 
 
 // app.use(
@@ -273,6 +273,8 @@ app.post('/completions', async (req, res) => {
         console.log(`these were your options: ${options}`)
     }
 })
+
+app.listen(HTTP_PORT, () => console.log(`Listening on ${PORT}`));
 
 
 
