@@ -17,12 +17,15 @@ const morgan = require('morgan')
 const server = express()
     .use(cors())
     .use(morgan('tiny'))
-    .listen(EXPRESS_PORT, () => console.log(`Listening on ${PORT}`));
+    .listen(HTTP_PORT, () => console.log(`Listening on ${PORT}`));
 
 const { Server } = require('ws')
 const wss = new Server({ server });
 
-
+const app = express()
+    .use(cors())
+    .use(morgan('tiny'))
+    .listen(EXPRESS_PORT, () => console.log(`Listening on ${PORT}`));
 
 
 // app.use(
@@ -163,7 +166,7 @@ wss.on('connection', (ws) => {
     //   let data = await collection.find({}).toArray();
     //   res.json(data);
 
-server.post('/registration', async (req, res) => {
+app.post('/registration', async (req, res) => {
     const db = client.db('resGen')
     const collection = db.collection('users')
     try {
@@ -191,11 +194,11 @@ server.post('/registration', async (req, res) => {
     res.status(201).json({ message: 'User created', userId: result.insertedId })
     } catch (error) {
     console.error(error)
-    res.status(500).json({ message: 'Server error', error })
+    res.status(500).json({ message: 'app error', error })
     }
 })
  
-server.post('/login', async (req, res) => {
+app.post('/login', async (req, res) => {
     console.log("session:", req.session)
     const db = client.db('resGen')
     const collection = db.collection('users') 
@@ -216,7 +219,7 @@ server.post('/login', async (req, res) => {
     
 })
 
-server.post('/historyPost', async (req, res) => {
+app.post('/historyPost', async (req, res) => {
     const db = client.db('resGen')
     const document = req.body
     // document['"date"'] = new Date(document.date)
@@ -232,7 +235,7 @@ server.post('/historyPost', async (req, res) => {
         res.status(500).json({ message: 'An error occurred' })
     }
 })
-server.get('/historyGet', async (req, res) => {
+app.get('/historyGet', async (req, res) => {
     const db = client.db('resGen');
     try {
         const collection = db.collection('history');
@@ -244,7 +247,7 @@ server.get('/historyGet', async (req, res) => {
 })
 
 // this should maybe be in a seperate class than any tasks that have to do with the database. maybe an externalApi class or something
-server.post('/completions', async (req, res) => {
+app.post('/completions', async (req, res) => {
     const options = {
         method: "POST",
         headers: {
