@@ -11,21 +11,13 @@ const path = require('path');
 const session = require('express-session')
 const cors = require('cors')
 const app = express()
-const {MongoClient, ServerApiVersion} = require('mongodb')
+const {MongoClient, ServerApiVersion, ObjectId} = require('mongodb')
 const bodyParser = require('body-parser')
 const bcrypt = require('bcrypt')
-const { ObjectId } = require('mongodb')
-const { createServer } = require("http");
-const { Server } = require("socket.io");
+const { Server } = require('ws');
+const wss = new Server({ server });
 const morgan = require('morgan');
-const io = new Server(process.env.REACT_APP_API_URL, {
-    cors: {
-        credentials: true,
-        methods: ["GET", "POST"]
-    }
-  })
-  
-httpServer.listen(HTTP_PORT)
+
 app.use(cors())
 app.use(morgan('tiny'));
 app.use(express.static(path.join(__dirname, 'build')))
@@ -43,6 +35,11 @@ app.use(express.static(path.join(__dirname, 'build')))
 //     })
 //   )
 
+
+
+
+
+
 // MongoDB connection
 const client = new MongoClient(CONNECTION_STRING, {
     serverApi: {
@@ -51,7 +48,6 @@ const client = new MongoClient(CONNECTION_STRING, {
         deprecationErrors: true,
       }
 })
-
 // connection establish and log error or success
 async function run() {
     try {
@@ -67,8 +63,10 @@ async function run() {
   run().catch(console.dir);
 // database variable declared empty globally
 let db = client.db('resGen')
-
 let users = {}
+
+
+
 // MIDDLEWARE function to protect certain endpoints
 // const isAuthenticated = (req, res, next) => {
 
@@ -82,13 +80,13 @@ let users = {}
 //   };
 
 // Set up socket connection
-io.on('connection', function (socket) {
+wss.on('connection', (ws) => {
     console.log('A connection has been made');
   
     // Event listener for the 'login' event
-    socket.on('login', (userId) => {
+    ws.on('login', (userId) => {
         console.log(`User ${userId} logged in`);
-        // users[userId] = socket; // Associate this socket with the user
+        // users[userId] = ws; // Associate this ws with the user
 
         // // Example code for watching changes in a MongoDB collection
         // const userIdHex = new ObjectId(userId); // Convert userId to ObjectId
@@ -102,15 +100,16 @@ io.on('connection', function (socket) {
         // changeStream.on('change', (change) => {
         //     console.log(`Detected change in ${userId}'s history:`, change);
         //     // Emit the change to the client
-        //     socket.emit('historyChange', change);
+        //     ws.emit('historyChange', change);
         //     });
     
         // Clean up the change stream when user disconnects
-        socket.on('logout', (userId) => {
+        ws.on('logout', (userId) => {
             console.log(`User ${userId} disconnected`);
             changeStream.close();
-            delete users[userId]; // Remove this user's socket
+            delete users[userId]; // Remove this user's ws
             });
+        ws.on('close', () => console.log('Client disconnected'))
     });
   });
 
@@ -274,11 +273,11 @@ app.listen(EXPRESS_PORT, () => console.log("Your server is listening on port: "+
 
 
 // GPT suggestions:
-// Readability: The code is readable and follows a consistent coding style with proper indentation and naming conventions. The use of separate sections for different functionality (e.g., server setup, routes, socket connection) improves code organization.
+// Readability: The code is readable and follows a consistent coding style with proper indentation and naming conventions. The use of separate sections for different functionality (e.g., server setup, routes, ws connection) improves code organization.
 
 // Performance improvements:
 
-//     Connection Handling: The socket.io connection is established inside the io.on('connection') event listener. It's important to note that the event listener is invoked for each new connection. To avoid creating multiple connections for each user, you should move the socket connection setup outside of the event listener to ensure a single connection is used.
+//     Connection Handling: The ws.io connection is established inside the io.on('connection') event listener. It's important to note that the event listener is invoked for each new connection. To avoid creating multiple connections for each user, you should move the socket connection setup outside of the event listener to ensure a single connection is used.
 
 //     Database Connection: Currently, the database connection is established twice: once using client.connect and then again using client.db. You can remove the first client.connect call since the connection is already established when creating the MongoClient instance.
 
