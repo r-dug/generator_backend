@@ -17,7 +17,6 @@ const morgan = require('morgan')
 const server = express()
     .use(cors())
     .use(morgan('tiny'))
-    .use(express.static(path.join(__dirname, 'build')))
     .listen(EXPRESS_PORT, () => console.log(`Listening on ${PORT}`));
 
 const { Server } = require('ws')
@@ -135,7 +134,7 @@ wss.on('connection', (ws) => {
   
 // request paths
 // Route to handle file upload
-// app.post('/upload', upload.single('file'), (req, res) => {
+// server.post('/upload', upload.single('file'), (req, res) => {
 //     if (!req.file) {
 //       // No file was uploaded, or wrong file type
 //       return res.status(400).send('Invalid file type. Only .png, .jpg and .jpeg are allowed');
@@ -164,7 +163,7 @@ wss.on('connection', (ws) => {
     //   let data = await collection.find({}).toArray();
     //   res.json(data);
 
-app.post('/registration', async (req, res) => {
+server.post('/registration', async (req, res) => {
     const db = client.db('resGen')
     const collection = db.collection('users')
     try {
@@ -196,7 +195,7 @@ app.post('/registration', async (req, res) => {
     }
 })
  
-app.post('/login', async (req, res) => {
+server.post('/login', async (req, res) => {
     console.log("session:", req.session)
     const db = client.db('resGen')
     const collection = db.collection('users') 
@@ -217,7 +216,7 @@ app.post('/login', async (req, res) => {
     
 })
 
-app.post('/historyPost', async (req, res) => {
+server.post('/historyPost', async (req, res) => {
     const db = client.db('resGen')
     const document = req.body
     // document['"date"'] = new Date(document.date)
@@ -233,7 +232,7 @@ app.post('/historyPost', async (req, res) => {
         res.status(500).json({ message: 'An error occurred' })
     }
 })
-app.get('/historyGet', async (req, res) => {
+server.get('/historyGet', async (req, res) => {
     const db = client.db('resGen');
     try {
         const collection = db.collection('history');
@@ -245,7 +244,7 @@ app.get('/historyGet', async (req, res) => {
 })
 
 // this should maybe be in a seperate class than any tasks that have to do with the database. maybe an externalApi class or something
-app.post('/completions', async (req, res) => {
+server.post('/completions', async (req, res) => {
     const options = {
         method: "POST",
         headers: {
@@ -272,7 +271,6 @@ app.post('/completions', async (req, res) => {
     }
 })
 
-app.listen(EXPRESS_PORT, () => console.log("Your server is listening on port: "+ EXPRESS_PORT))
 
 
 
