@@ -17,9 +17,8 @@ const bcrypt = require('bcrypt')
 const { ObjectId } = require('mongodb')
 const { createServer } = require("http");
 const { Server } = require("socket.io");
-const httpServer = createServer();
 const morgan = require('morgan');
-const io = new Server(httpServer, {
+const io = new Server(process.env.REACT_APP_API_URL, {
     cors: {
         credentials: true,
         methods: ["GET", "POST"]
