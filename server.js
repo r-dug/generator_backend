@@ -17,7 +17,7 @@ const morgan = require('morgan')
 const server = express()
     .use(cors())
     .use(morgan('tiny'))
-    .listen(HTTP_PORT, () => console.log(`Listening on ${PORT}`));
+    .listen(HTTP_PORT, () => console.log(`Listening on ${HTTP_PORT}`));
 
 const { Server } = require('ws')
 const wss = new Server({ server });
@@ -274,7 +274,7 @@ app.post('/completions', async (req, res) => {
     }
 })
 
-app.listen(HTTP_PORT, () => console.log(`Listening on ${PORT}`));
+app.listen(HTTP_PORT, () => console.log(`Listening on ${EXPRESS_PORT}`));
 
 
 
