@@ -23,7 +23,10 @@ const { Server } = require('ws')
 const wss = new Server({ server });
 
 const app = express()
-    .use(cors())
+    .json()
+    .use(cors({
+        origin: "*"
+    }))
     .use(morgan('tiny'))
 
 
