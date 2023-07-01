@@ -10,18 +10,21 @@ const express = require('express')
 const path = require('path');
 const session = require('express-session')
 const cors = require('cors')
-
 const {MongoClient, ServerApiVersion, ObjectId} = require('mongodb')
 const bodyParser = require('body-parser')
 const bcrypt = require('bcrypt')
-const { Server } = require('ws');
-const wss = new Server({ server });
-const morgan = require('morgan');
-
-const app = express()
+const morgan = require('morgan')
+const server = express()
     .use(cors())
     .use(morgan('tiny'))
     .use(express.static(path.join(__dirname, 'build')))
+    .listen(PORT, () => console.log(`Listening on ${PORT}`));
+
+const { Server } = require('ws')
+const wss = new Server({ server });
+
+
+
 
 // app.use(
 //     session({
