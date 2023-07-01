@@ -18,7 +18,7 @@ const server = express()
     .use(cors())
     .use(morgan('tiny'))
     .use(express.static(path.join(__dirname, 'build')))
-    .listen(PORT, () => console.log(`Listening on ${PORT}`));
+    .listen(EXPRESS_PORT, () => console.log(`Listening on ${PORT}`));
 
 const { Server } = require('ws')
 const wss = new Server({ server });
