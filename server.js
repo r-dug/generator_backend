@@ -5,7 +5,7 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 const SECRET = process.env.SECRET
 const CONNECTION_STRING = process.env.MONGODB_URI
 const FRONT_END = process.env.FRONT_END
-console.log(`key${CONNECTION_STRING}\n${EXPRESS_PORT}\n${HTTP_PORT}\n${SECRET}`)
+console.log(`key${CONNECTION_STRING}\n${EXPRESS_PORT}\n${HTTP_PORT}\n${SECRET}\n${FRONT_END}`)
 const express = require('express')
 const path = require('path');
 const session = require('express-session')
