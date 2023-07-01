@@ -28,7 +28,9 @@ const io = new Server(httpServer, {
   
 httpServer.listen(HTTP_PORT)
 app.use(express.json())
-app.use(cors())
+app.use(cors({
+    origin: FRONT_END
+}))
 app.use(morgan('tiny'));
 app.use(express.static(path.join(__dirname, 'build')))
 
@@ -45,7 +47,7 @@ app.use(express.static(path.join(__dirname, 'build')))
 //     })
 //   )
 
-// MongoDB connection string
+// MongoDB connection
 const client = new MongoClient(CONNECTION_STRING, {
     serverApi: {
         version: ServerApiVersion.v1,
