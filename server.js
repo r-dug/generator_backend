@@ -23,7 +23,7 @@ const { Server } = require('ws')
 const wss = new Server({ server });
 
 const app = express()
-    .json()
+    .use(express.json())
     .use(cors({
         origin: "*"
     }))
