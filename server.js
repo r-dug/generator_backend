@@ -274,7 +274,7 @@ app.post('/completions', async (req, res) => {
     }
 })
 
-app.listen(HTTP_PORT, () => console.log(`Listening on ${EXPRESS_PORT}`));
+app.listen(EXPRESS_PORT, () => console.log(`Listening on ${EXPRESS_PORT}`));
 
 
 
