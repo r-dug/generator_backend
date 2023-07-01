@@ -27,17 +27,7 @@ const io = new Server(httpServer, {
   })
   
 httpServer.listen(HTTP_PORT)
-app.use(express.json())
-app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", FRONT_END);
-    res.header("Access-Control-Allow-Methods", "GET,PUT,POST");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    next();
-  })  
-
-app.use(cors({
-    origin: FRONT_END
-}))
+app.use(cors())
 app.use(morgan('tiny'));
 app.use(express.static(path.join(__dirname, 'build')))
 
