@@ -23,9 +23,7 @@ const morgan = require('morgan')
 console.log(FRONT_END)
 const app = express()
     .use(express.json())
-    .use(cors({
-        origin: FRONT_END
-    }))
+    .use(cors())
     .use(morgan('tiny'))
 
 
