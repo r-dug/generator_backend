@@ -268,14 +268,14 @@ app.listen(EXPRESS_PORT, () => console.log(`Listening on ${EXPRESS_PORT}`));
         //     });
     
         // Clean up the change stream when user disconnects
-        ws.on('logout', (userId) => {
-            console.log(`User ${userId} disconnected`);
-            changeStream.close();
-            delete users[userId]; // Remove this user's ws
-            });
-        ws.on('close', () => console.log('Client disconnected'))
-    });
-  });
+//         ws.on('logout', (userId) => {
+//             console.log(`User ${userId} disconnected`);
+//             changeStream.close();
+//             delete users[userId]; // Remove this user's ws
+//             });
+//         ws.on('close', () => console.log('Client disconnected'))
+//     });
+//   });
 
 // GPT suggestions:
 // Readability: The code is readable and follows a consistent coding style with proper indentation and naming conventions. The use of separate sections for different functionality (e.g., server setup, routes, ws connection) improves code organization.
