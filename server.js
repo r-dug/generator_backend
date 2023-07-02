@@ -20,11 +20,11 @@ const morgan = require('morgan')
 //     .listen(HTTP_PORT, () => console.log(`Listening on ${HTTP_PORT}`));
 
 
-
+console.log(FRONT_END)
 const app = express()
     .use(express.json())
     .use(cors({
-        origin: "*"
+        origin: FRONT_END
     }))
     .use(morgan('tiny'))
 
