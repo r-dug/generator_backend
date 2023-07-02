@@ -244,14 +244,14 @@ app.post('/completions', async (req, res) => {
 
 app.listen(EXPRESS_PORT, () => console.log(`Listening on ${EXPRESS_PORT}`));
 
-const { Server } = require('ws')
-const wss = new Server({ app })
-wss.on('connection', (ws) => {
-    console.log('A connection has been made');
+// const { Server } = require('ws')
+// const wss = new Server({ app })
+// wss.on('connection', (ws) => {
+//     console.log('A connection has been made');
   
-    // Event listener for the 'login' event
-    ws.on('login', (userId) => {
-        console.log(`User ${userId} logged in`);
+//     // Event listener for the 'login' event
+//     ws.on('login', (userId) => {
+//         console.log(`User ${userId} logged in`);
         // users[userId] = ws; // Associate this ws with the user
 
         // // Example code for watching changes in a MongoDB collection
