@@ -1,5 +1,5 @@
 require('dotenv').config()
-const EXPRESS_PORT = process.env.PORT\
+const EXPRESS_PORT = process.env.PORT
 const HTTP_PORT = process.env.WS_PORT 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 const SECRET = process.env.SECRET
@@ -14,13 +14,12 @@ const {MongoClient, ServerApiVersion, ObjectId} = require('mongodb')
 const bodyParser = require('body-parser')
 const bcrypt = require('bcrypt')
 const morgan = require('morgan')
-const server = express()
-    .use(cors())
-    .use(morgan('tiny'))
-    .listen(HTTP_PORT, () => console.log(`Listening on ${HTTP_PORT}`));
+// const server = express()
+//     .use(cors())
+//     .use(morgan('tiny'))
+//     .listen(HTTP_PORT, () => console.log(`Listening on ${HTTP_PORT}`));
 
-const { Server } = require('ws')
-const wss = new Server({ server });
+
 
 const app = express()
     .use(express.json())
@@ -43,9 +42,6 @@ const app = express()
 //       },
 //     })
 //   )
-
-
-
 
 
 
@@ -89,38 +85,7 @@ let users = {}
 //   };
 
 // Set up socket connection
-wss.on('connection', (ws) => {
-    console.log('A connection has been made');
-  
-    // Event listener for the 'login' event
-    ws.on('login', (userId) => {
-        console.log(`User ${userId} logged in`);
-        // users[userId] = ws; // Associate this ws with the user
 
-        // // Example code for watching changes in a MongoDB collection
-        // const userIdHex = new ObjectId(userId); // Convert userId to ObjectId
-        // // console.log(userIdHex)
-        // // Replace 'historyCollection' with your actual collection name
-        // const historyCollection = db.collection('history');
-        // // console.log(historyCollection)
-        // // Start listening to changes
-        // const changeStream = historyCollection.watch({ $match: { 'fullDocument.userId': userIdHex } });
-
-        // changeStream.on('change', (change) => {
-        //     console.log(`Detected change in ${userId}'s history:`, change);
-        //     // Emit the change to the client
-        //     ws.emit('historyChange', change);
-        //     });
-    
-        // Clean up the change stream when user disconnects
-        ws.on('logout', (userId) => {
-            console.log(`User ${userId} disconnected`);
-            changeStream.close();
-            delete users[userId]; // Remove this user's ws
-            });
-        ws.on('close', () => console.log('Client disconnected'))
-    });
-  });
 
 // Multer configuration for file validation. 
 // const upload = multer({
@@ -279,8 +244,40 @@ app.post('/completions', async (req, res) => {
 
 app.listen(EXPRESS_PORT, () => console.log(`Listening on ${EXPRESS_PORT}`));
 
+const { Server } = require('ws')
+const wss = new Server({ app })
+wss.on('connection', (ws) => {
+    console.log('A connection has been made');
+  
+    // Event listener for the 'login' event
+    ws.on('login', (userId) => {
+        console.log(`User ${userId} logged in`);
+        // users[userId] = ws; // Associate this ws with the user
 
+        // // Example code for watching changes in a MongoDB collection
+        // const userIdHex = new ObjectId(userId); // Convert userId to ObjectId
+        // // console.log(userIdHex)
+        // // Replace 'historyCollection' with your actual collection name
+        // const historyCollection = db.collection('history');
+        // // console.log(historyCollection)
+        // // Start listening to changes
+        // const changeStream = historyCollection.watch({ $match: { 'fullDocument.userId': userIdHex } });
 
+        // changeStream.on('change', (change) => {
+        //     console.log(`Detected change in ${userId}'s history:`, change);
+        //     // Emit the change to the client
+        //     ws.emit('historyChange', change);
+        //     });
+    
+        // Clean up the change stream when user disconnects
+        ws.on('logout', (userId) => {
+            console.log(`User ${userId} disconnected`);
+            changeStream.close();
+            delete users[userId]; // Remove this user's ws
+            });
+        ws.on('close', () => console.log('Client disconnected'))
+    });
+  });
 
 // GPT suggestions:
 // Readability: The code is readable and follows a consistent coding style with proper indentation and naming conventions. The use of separate sections for different functionality (e.g., server setup, routes, ws connection) improves code organization.
