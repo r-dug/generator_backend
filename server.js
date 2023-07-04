@@ -43,7 +43,7 @@ let db = client.db('resGen')
 let users = {}
 
 const sessionStore = MongoStore.create({
-    mongoUrl: `${CONNECTION_STRING}/sessions`,
+    mongoUrl: `${CONNECTION_STRING}`,
     collectionName: "sessions",
     ttl: 3600
 })
