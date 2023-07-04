@@ -51,9 +51,12 @@ const sessionStore = MongoStore.create({
 // global express middleware
 const app = express()
     .use(express.json())
-    .use(cors())
+    .use(cors({
+        credentials: true,
+       origin: FRONT_END
+    }))
     .use(morgan('tiny'))
-
+app.set('view engine', "ejs")
 // session middleware
 app.use(
     session({
@@ -62,15 +65,22 @@ app.use(
       saveUninitialized: false, // Do not save uninitialized sessions
       store: sessionStore,
       cookie: {
+        sameSite: 'lax', // cross-site
         secure: false, // Set to true if using HTTPS
         httpOnly: true, // Prevent client-side JavaScript from accessing cookies
         maxAge: 1000*60*30, // Session expiration time (in milliseconds)
+        domain: FRONT_END,
+        path: "/"
       },
     })
   )
 // session check middleware
-const isAuth = (erq, res, next) => {
-    
+const isAuth = (req, res, next) => {
+    if(req.session.isAuth) {
+        next()
+    }else{
+        res.redirect('/login')
+    }
 }
 
 
@@ -151,7 +161,7 @@ app.post('/registration', async (req, res) => {
         res.status(201).json({ message: 'User created', userId: result.insertedId })
         req.session.user = {
             id: result.insertedId,
-            username: req.username
+            username: req.body.username
         };
     } catch (error) {
         console.error(error)
@@ -178,9 +188,16 @@ app.post('/login', async (req, res) => {
         return res.status(400).json({ message: 'Incorrect Password' })
     } else {
         req.session.isAuth = true
+        console.log(res)
+        res.header('Access-Control-Allow-Origin', FRONT_END);
+        res.header('Access-Control-Allow-Credentials', 'true');
+        console.log('Set-Cookie:', res.get('Set-Cookie'));
         return res.status(200).json({message: "Login Successful", user: existingUser._id})
     }
-    
+})
+
+app.get('/main', isAuth, (req, res) => {
+    res.render("main")
 })
 
 app.post('/historyPost', async (req, res) => {
