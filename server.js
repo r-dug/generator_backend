@@ -140,10 +140,7 @@ app.post('/registration', async (req, res) => {
             return res.status(400).json({ message: 'this Email is already in use.' })
         }
         // Hash the password before saving in the database
-        const saltRounds = 10
-        const hashedPassword = await bcrypt.genSalt(saltRounds, function(err,salt){
-            bcrypt.hash(req.body.password)
-        })
+        const hashedPassword =  await bcrypt.hash(req.body.password, 10)
         // create user object to pass to db
         const user = {
             username: req.body.username,
@@ -154,7 +151,7 @@ app.post('/registration', async (req, res) => {
         res.status(201).json({ message: 'User created', userId: result.insertedId })
         req.session.user = {
             id: result.insertedId,
-            username: req.user.username
+            username: req.username
         };
     } catch (error) {
         console.error(error)
@@ -175,6 +172,7 @@ app.post('/login', async (req, res) => {
     if (!existingUser) {
         return res.status(400).json({ message: 'Incorrect Uname' })
     }
+    console.log(document.password, existingUser)
     const correctPass = await bcrypt.compare(document.password, existingUser.password)
     if (!correctPass) {
         return res.status(400).json({ message: 'Incorrect Password' })
