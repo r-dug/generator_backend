@@ -1,46 +1,20 @@
 require('dotenv').config()
-const EXPRESS_PORT = process.env.PORT
+const EXPRESS_PORT = process.env.PORT || 8000
 const HTTP_PORT = process.env.WS_PORT 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 const SECRET = process.env.SECRET
-const CONNECTION_STRING = process.env.MONGODB_URI
-const FRONT_END = process.env.FRONT_END
-console.log(`key${CONNECTION_STRING}\n${EXPRESS_PORT}\n${HTTP_PORT}\n${SECRET}\n${FRONT_END}`)
+const CONNECTION_STRING = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017"
+const FRONT_END = process.env.FRONT_END || "127.0.0.1:3000"
+console.log(`key${CONNECTION_STRING}\n${EXPRESS_PORT}\n${HTTP_PORT}\nSECRET: ${SECRET}\n${FRONT_END}`)
 const express = require('express')
 const path = require('path');
 const session = require('express-session')
 const cors = require('cors')
 const {MongoClient, ServerApiVersion, ObjectId} = require('mongodb')
+const MongoStore = require('connect-mongo');
 const bodyParser = require('body-parser')
 const bcrypt = require('bcrypt')
 const morgan = require('morgan')
-// const server = express()
-//     .use(cors())
-//     .use(morgan('tiny'))
-//     .listen(HTTP_PORT, () => console.log(`Listening on ${HTTP_PORT}`));
-
-
-console.log(FRONT_END)
-const app = express()
-    .use(express.json())
-    .use(cors())
-    .use(morgan('tiny'))
-
-
-
-// app.use(
-//     session({
-//       secret: SECRET, // Set a secret key for session signing (replace 'your-secret-key' with your own secret)
-//       resave: false, // Disable session resaving on each request
-//       saveUninitialized: false, // Do not save uninitialized sessions
-//       cookie: {
-//         secure: false, // Set to true if using HTTPS
-//         httpOnly: true, // Prevent client-side JavaScript from accessing cookies
-//         maxAge: 1800000, // Session expiration time (in milliseconds)
-//       },
-//     })
-//   )
-
 
 
 // MongoDB connection
@@ -68,24 +42,39 @@ async function run() {
 let db = client.db('resGen')
 let users = {}
 
+const sessionStore = MongoStore.create({
+    mongoUrl: `${CONNECTION_STRING}/sessions`,
+    collectionName: "sessions",
+    ttl: 3600
+})
+
+// global express middleware
+const app = express()
+    .use(express.json())
+    .use(cors())
+    .use(morgan('tiny'))
+
+// session middleware
+app.use(
+    session({
+      secret: SECRET, // Set a secret key for session signing (replace 'your-secret-key' with your own secret)
+      resave: false, // Disable session resaving on each request
+      saveUninitialized: false, // Do not save uninitialized sessions
+      store: sessionStore,
+      cookie: {
+        secure: false, // Set to true if using HTTPS
+        httpOnly: true, // Prevent client-side JavaScript from accessing cookies
+        maxAge: 1000*60*30, // Session expiration time (in milliseconds)
+      },
+    })
+  )
+// session check middleware
+const isAuth = (erq, res, next) => {
+    
+}
 
 
-// MIDDLEWARE function to protect certain endpoints
-// const isAuthenticated = (req, res, next) => {
-
-//     if (req.session.user) {
-//       // User is authenticated, proceed to the next middleware or route handler
-//       next();
-//     } else {
-//       // User is not authenticated, redirect to the login page or send an error response
-//       res.redirect(`${FRONT_END}/login`);
-//     }
-//   };
-
-// Set up socket connection
-
-
-// Multer configuration for file validation. 
+// Multer middleware for file validation. 
 // const upload = multer({
 //     dest: 'uploads/', // Temporary storage location
 //     fileFilter: (req, file, cb) => {
@@ -132,35 +121,44 @@ let users = {}
     //   let data = await collection.find({}).toArray();
     //   res.json(data);
 
+app.get("/", (req, res) => {
+    res.send("What are you doing here?\nI didn't want you to see me naked!")
+})
+
 app.post('/registration', async (req, res) => {
+    // our database and collection as variables
     const db = client.db('resGen')
     const collection = db.collection('users')
     try {
+        // look for a username and email corresponding with the ones in the request body
+        // if exists, reject registration
         const existingUser = await collection.findOne({ username: req.body.username })
-
+        const existingEmail = await collection.findOne({ email: req.body.email })
         if (existingUser) {
             return res.status(400).json({ message: 'User already exists' })
-        }
-    
-        const existingEmail = await collection.findOne({ email: req.body.email })
-
-        if (existingEmail) {
+        } else if (existingEmail) {
             return res.status(400).json({ message: 'this Email is already in use.' })
         }
-    // Hash the password before saving in the database
-    const hashedPassword = await bcrypt.hash(req.body.password, 10)
-    const user = {
-        // user_id: reversed and hashed username?
-        username: req.body.username,
-        password: hashedPassword,
-        email: req.body.email
-    }
-    
-    let result = await collection.insertOne(user);
-    res.status(201).json({ message: 'User created', userId: result.insertedId })
+        // Hash the password before saving in the database
+        const saltRounds = 10
+        const hashedPassword = await bcrypt.genSalt(saltRounds, function(err,salt){
+            bcrypt.hash(req.body.password)
+        })
+        // create user object to pass to db
+        const user = {
+            username: req.body.username,
+            password: hashedPassword,
+            email: req.body.email
+        }
+        let result = await collection.insertOne(user);
+        res.status(201).json({ message: 'User created', userId: result.insertedId })
+        req.session.user = {
+            id: result.insertedId,
+            username: req.user.username
+        };
     } catch (error) {
-    console.error(error)
-    res.status(500).json({ message: 'app error', error })
+        console.error(error)
+        res.status(500).json({ message: 'app error', error })
     }
 })
  
@@ -169,18 +167,20 @@ app.post('/login', async (req, res) => {
     const db = client.db('resGen')
     const collection = db.collection('users') 
     const document = req.body
-    console.log(res.status)
+    console.log(document)
     const hashedPassword = await bcrypt.hash(req.body.password, 10)
-    const existingUser = await collection.findOne({ username: document.username })
-    const correctPass = await bcrypt.compare(document.password, hashedPassword)
-    let userpass = await collection.findOne({ username: document.username })
-    console.log(existingUser)
+    const existingUser = await collection.findOne({ 
+        username: document.username
+    })
     if (!existingUser) {
         return res.status(400).json({ message: 'Incorrect Uname' })
-    } else if (!correctPass) {
+    }
+    const correctPass = await bcrypt.compare(document.password, existingUser.password)
+    if (!correctPass) {
         return res.status(400).json({ message: 'Incorrect Password' })
     } else {
-        return res.status(200).json({message: "Login Successful", user: userpass._id})
+        req.session.isAuth = true
+        return res.status(200).json({message: "Login Successful", user: existingUser._id})
     }
     
 })

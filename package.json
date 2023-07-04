@@ -9,6 +9,7 @@
   "dependencies": {
     "bcrypt": "^5.0.1",
     "bson": "^5.3.0",
+    "connect-mongo": "^5.0.0",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
     "crypto-browserify": "^3.12.0",
