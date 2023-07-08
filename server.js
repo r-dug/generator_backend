@@ -229,7 +229,7 @@ app.post('/login', async (req, res) => {
         } else {
 
             req.session.isAuth = true
-            console.log(req.session)
+            // console.log(req.session)
 
             res.header('Access-Control-Allow-Origin', FRONT_END);
             res.header('Access-Control-Allow-Credentials', 'true');
