@@ -183,12 +183,8 @@ app.post('/registration', async (req, res) => {
         const token = createToken(newUser)
         const decodedToken = jwtDecode(token)
         const expiresAt = decodedToken.exp
-        // json user info to return
-        const userInfo = {
-            firstName,
-            lastName,
-            email
-        }
+
+
         req.session.isAuth = true
         console.log(req.session)
         console.log(newUser.insertedId.toString())
@@ -229,7 +225,7 @@ app.post('/login', async (req, res) => {
         } else {
 
             req.session.isAuth = existingUser._id.toString()
-            console.log(existingUser._id.toString())
+            console.log(process.env.COOKIE_ALLOW)
             const expires = req.session.cookie.expires
             res.header('Access-Control-Allow-Origin', FRONT_END);
             res.header('Access-Control-Allow-Credentials', 'true');
@@ -238,7 +234,7 @@ app.post('/login', async (req, res) => {
                 secure: false, // Set to true if using HTTPS
                 httpOnly: true, // Prevent client-side JavaScript from accessing cookies
                 maxAge: 1000*60*30, // Session expiration time (in milliseconds)
-                domain: FRONT_END,
+                domain: process.env.COOKIE_ALLOW,
                 path: "/login"
             })
             return res.status(200).json({
