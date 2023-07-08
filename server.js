@@ -75,13 +75,14 @@ const app = express()
     .set("trust proxy", 1)
     .use(
         session({
+            store: sessionStore,
             proxy: true,
             secret: SECRET, // Set a secret key for session signing (replace 'your-secret-key' with your own secret)
             resave: false, // Disable session resaving on each request
             saveUninitialized: false, // Do not save uninitialized sessions
-            store: sessionStore,
+            unset: 'destroy',
             cookie: {
-                sameSite: 'none', // cross-site
+                sameSite: 'lax', // cross-site
                 secure: true, // Set to true if using HTTPS
                 httpOnly: false, // Prevent client-side JavaScript from accessing cookies
                 maxAge: 1000*60*30, // Session expiration time (in milliseconds)
