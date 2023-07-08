@@ -185,12 +185,20 @@ app.post('/registration', async (req, res) => {
         // const expiresAt = decodedToken.exp
 
 
-        req.session.isAuth = true
+        // req.session.isAuth = true
         console.log(req.session)
         console.log(newUser.insertedId.toString())
         res.header('Access-Control-Allow-Origin', FRONT_END);
         res.header('Access-Control-Allow-Credentials', 'true');
-        res.cookie("session", newUser.insertedId.toString())
+        res.cookie("session", newUser.insertedId.toString(), {
+            proxy: true,
+            sameSite: 'none', // cross-site
+            secure: true, // Set to true if using HTTPS
+            httpOnly: false, // Prevent client-side JavaScript from accessing cookies
+            maxAge: 60*30*1000, // Session expiration time (in milliseconds)
+            domain: process.env.COOKIE_ALLOW,
+            path: "/"
+        })
         // return to the front end
         console.log(res.cookie)
         return res.status(200).json({ 
