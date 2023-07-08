@@ -235,13 +235,12 @@ app.post('/login', async (req, res) => {
             res.header('Access-Control-Allow-Credentials', 'true');
             res.cookie("session", existingUser._id.toString(), {
                 sameSite: 'lax', // cross-site
-        secure: false, // Set to true if using HTTPS
-        httpOnly: true, // Prevent client-side JavaScript from accessing cookies
-        maxAge: 1000*60*30, // Session expiration time (in milliseconds)
-        domain: FRONT_END,
-        path: "/"
-            }
-            )
+                secure: false, // Set to true if using HTTPS
+                httpOnly: true, // Prevent client-side JavaScript from accessing cookies
+                maxAge: 1000*60*30, // Session expiration time (in milliseconds)
+                domain: FRONT_END,
+                path: "/login"
+            })
             return res.status(200).json({
                 message: "Login Successful"
             })
