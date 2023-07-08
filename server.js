@@ -28,8 +28,8 @@ const jwt = require('express-jwt')
 const jwtDecode = require('jwt-decode')
 
 // local components
-const User = require('./data/User')
-const { userInfo } = require('os')
+// const User = require('./data/User')
+// const { userInfo } = require('os')
 const {
     createToken,
     hashPassword,
