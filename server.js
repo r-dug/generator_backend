@@ -232,7 +232,7 @@ app.post('/login', async (req, res) => {
             res.cookie("session", existingUser._id.toString(), {
                 sameSite: 'none', // cross-site
                 secure: true, // Set to true if using HTTPS
-                httpOnly: true, // Prevent client-side JavaScript from accessing cookies
+                httpOnly: false, // Prevent client-side JavaScript from accessing cookies
                 maxAge: 1000*60*30, // Session expiration time (in milliseconds)
                 domain: process.env.COOKIE_ALLOW,
                 path: "/"
