@@ -229,7 +229,7 @@ app.post('/login', async (req, res) => {
         } else {
 
             req.session.id = existingUser._id.toString()
-            console.log(req.session)
+            console.log(req.session.cookie)
 
             res.header('Access-Control-Allow-Origin', FRONT_END);
             res.header('Access-Control-Allow-Credentials', 'true');
