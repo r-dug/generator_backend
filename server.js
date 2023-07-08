@@ -196,6 +196,7 @@ app.post('/registration', async (req, res) => {
         res.header('Access-Control-Allow-Credentials', 'true');
         res.cookie("session", newUser.insertedId.toString())
         // return to the front end
+        console.log(res.cookie)
         return res.status(200).json({ 
             message: 'User created'
         })
@@ -228,11 +229,11 @@ app.post('/login', async (req, res) => {
         } else {
 
             req.session.isAuth = existingUser._id.toString()
-            console.log(req.session.cookie.expires)
-            const expires = await req.session.cookie._expires.toString()
+            console.log(existingUser._id.toString())
+            const expires = await req.session.cookie.expires.toString()
             res.header('Access-Control-Allow-Origin', FRONT_END);
             res.header('Access-Control-Allow-Credentials', 'true');
-            res.cookie("session", existingUser._id.toString())
+            res.cookie("session", existingUser._id.toString(), )
             return res.status(200).json({
                 message: "Login Successful"
             })
