@@ -72,22 +72,22 @@ const sessionStore = MongoStore.create({
 
 // global express middleware
 const app = express()
-.use(
-    session({
-      secret: SECRET, // Set a secret key for session signing (replace 'your-secret-key' with your own secret)
-      resave: false, // Disable session resaving on each request
-      saveUninitialized: false, // Do not save uninitialized sessions
-      store: sessionStore,
-      cookie: {
-        sameSite: 'lax', // cross-site
-        secure: true, // Set to true if using HTTPS
-        httpOnly: true, // Prevent client-side JavaScript from accessing cookies
-        maxAge: 1000*60*30, // Session expiration time (in milliseconds)
-        domain: FRONT_END,
-        path: "/"
-      },
-    })
-  )
+    .set("trust proxy", 1)
+    .use(
+        session({
+            proxy: true,
+            secret: SECRET, // Set a secret key for session signing (replace 'your-secret-key' with your own secret)
+            resave: false, // Disable session resaving on each request
+            saveUninitialized: false, // Do not save uninitialized sessions
+            store: sessionStore,
+            cookie: {
+                sameSite: 'lax', // cross-site
+                secure: true, // Set to true if using HTTPS
+                httpOnly: true, // Prevent client-side JavaScript from accessing cookies
+                maxAge: 1000*60*30, // Session expiration time (in milliseconds)
+                domain: FRONT_END,
+                path: "/"
+            }}))
     .use(express.json())
     .use(cors({
         credentials: true,
@@ -95,7 +95,7 @@ const app = express()
     }))
     .use(morgan('tiny'))
 app.set('view engine', "ejs")
-
+app.set('view engine', "ejs")
 
 // Multer middleware for file validation. 
 // const upload = multer({
@@ -230,6 +230,7 @@ app.post('/login', async (req, res) => {
             res.header('Access-Control-Allow-Origin', FRONT_END);
             res.header('Access-Control-Allow-Credentials', 'true');
             res.cookie("session", existingUser._id.toString(), {
+                proxy: true,
                 sameSite: 'none', // cross-site
                 secure: true, // Set to true if using HTTPS
                 httpOnly: false, // Prevent client-side JavaScript from accessing cookies
