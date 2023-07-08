@@ -228,7 +228,7 @@ app.post('/login', async (req, res) => {
             return res.status(403).json({ message: 'invalid credentials' })
         } else {
 
-            req.session.isAuth = true
+            req.session.id = existingUser._id.toString()
             console.log(req.session)
 
             res.header('Access-Control-Allow-Origin', FRONT_END);
