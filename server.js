@@ -170,7 +170,7 @@ app.post('/registration', async (req, res) => {
 })
  
 app.post('/login', async (req, res) => {
-    console.log("session:", req.session)
+    console.log("session:", req.session.Session)
     const db = client.db('resGen')
     const collection = db.collection('users') 
     const document = req.body
@@ -182,17 +182,20 @@ app.post('/login', async (req, res) => {
     if (!existingUser) {
         return res.status(400).json({ message: 'Incorrect Uname' })
     }
-    console.log(document.password, existingUser)
     const correctPass = await bcrypt.compare(document.password, existingUser.password)
     if (!correctPass) {
         return res.status(400).json({ message: 'Incorrect Password' })
     } else {
         req.session.isAuth = true
-        console.log(res)
         res.header('Access-Control-Allow-Origin', FRONT_END);
         res.header('Access-Control-Allow-Credentials', 'true');
-        console.log('Set-Cookie:', res.get('Set-Cookie'));
-        return res.status(200).json({message: "Login Successful", user: existingUser._id})
+            res.cookie("session", existingUser._id.toString(), JSON.stringify(req.sessionSession..cookie))
+            return res.status(200).json({
+                message: "Login Successful"
+            })
+        }
+    }catch (error){
+        console.error(error)
     }
 })
 
