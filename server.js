@@ -81,11 +81,11 @@ const app = express()
             saveUninitialized: false, // Do not save uninitialized sessions
             store: sessionStore,
             cookie: {
-                sameSite: 'lax', // cross-site
+                sameSite: 'false', // cross-site
                 secure: true, // Set to true if using HTTPS
-                httpOnly: true, // Prevent client-side JavaScript from accessing cookies
+                httpOnly: false, // Prevent client-side JavaScript from accessing cookies
                 maxAge: 1000*60*30, // Session expiration time (in milliseconds)
-                domain: FRONT_END,
+                domain: process.env.COOKIE_ALLOW,
                 path: "/"
             }}))
     .use(express.json())
@@ -94,8 +94,6 @@ const app = express()
         origin: FRONT_END
     }))
     .use(morgan('tiny'))
-app.set('view engine', "ejs")
-app.set('view engine', "ejs")
 
 // Multer middleware for file validation. 
 // const upload = multer({
