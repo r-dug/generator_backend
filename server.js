@@ -233,7 +233,7 @@ app.post('/login', async (req, res) => {
 
             res.header('Access-Control-Allow-Origin', FRONT_END);
             res.header('Access-Control-Allow-Credentials', 'true');
-            res.cookie("session", existingUser._id.toString(), JSON.stringify(req.session.cookie))
+            res.cookie("session", existingUser._id.toString(), JSON.stringify(req.session.session.cookie))
             return res.status(200).json({
                 message: "Login Successful"
             })
