@@ -235,7 +235,7 @@ app.post('/login', async (req, res) => {
                 httpOnly: true, // Prevent client-side JavaScript from accessing cookies
                 maxAge: 1000*60*30, // Session expiration time (in milliseconds)
                 domain: process.env.COOKIE_ALLOW,
-                path: "/login"
+                path: "/"
             })
             return res.status(200).json({
                 message: "Login Successful"
