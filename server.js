@@ -190,13 +190,12 @@ app.post('/registration', async (req, res) => {
             email
         }
         req.session.isAuth = true
-        // console.log(req.session)
-        // console.log(newUser.insertedId.toString())
+        console.log(req.session)
+        console.log(newUser.insertedId.toString())
         res.header('Access-Control-Allow-Origin', FRONT_END);
         res.header('Access-Control-Allow-Credentials', 'true');
         res.cookie("session", newUser.insertedId.toString())
         // return to the front end
-        console.log(res.cookie)
         return res.status(200).json({ 
             message: 'User created'
         })
