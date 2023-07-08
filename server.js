@@ -81,7 +81,7 @@ const app = express()
             saveUninitialized: false, // Do not save uninitialized sessions
             store: sessionStore,
             cookie: {
-                sameSite: 'false', // cross-site
+                sameSite: 'none', // cross-site
                 secure: true, // Set to true if using HTTPS
                 httpOnly: false, // Prevent client-side JavaScript from accessing cookies
                 maxAge: 1000*60*30, // Session expiration time (in milliseconds)
