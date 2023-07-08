@@ -228,12 +228,12 @@ app.post('/login', async (req, res) => {
             return res.status(403).json({ message: 'invalid credentials' })
         } else {
 
-            req.session.id = existingUser._id.toString()
-            console.log(req.session.cookie)
-
+            req.session.isAuth = existingUser._id.toString()
+            console.log(req.session.cookie._expires)
+            const expires = await req.session.cookie._expires.toString()
             res.header('Access-Control-Allow-Origin', FRONT_END);
             res.header('Access-Control-Allow-Credentials', 'true');
-            res.cookie("session", existingUser._id.toString(), JSON.stringify(req.session.cookie))
+            res.cookie("session", existingUser._id.toString())
             return res.status(200).json({
                 message: "Login Successful"
             })
