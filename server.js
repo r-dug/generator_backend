@@ -1,23 +1,43 @@
+// environment variable declaration n shit. DOTENC mod only for local env. fallbacks in case.
 require('dotenv').config()
 const EXPRESS_PORT = process.env.PORT || 8000
 const HTTP_PORT = process.env.WS_PORT 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 const SECRET = process.env.SECRET
 const CONNECTION_STRING = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017"
-const FRONT_END = process.env.FRONT_END || "127.0.0.1:3000"
+const FRONT_END = process.env.FRONT_END || "http://localhost:3000"
 console.log(`key${CONNECTION_STRING}\n${EXPRESS_PORT}\n${HTTP_PORT}\nSECRET: ${SECRET}\n${FRONT_END}`)
+
+// express modules
 const express = require('express')
 const path = require('path');
 const session = require('express-session')
 const cors = require('cors')
-const {MongoClient, ServerApiVersion, ObjectId} = require('mongodb')
-const MongoStore = require('connect-mongo');
 const bodyParser = require('body-parser')
-const bcrypt = require('bcrypt')
 const morgan = require('morgan')
 
+// Mongo Modules
+const {MongoClient, ServerApiVersion, ObjectId} = require('mongodb')
+const MongoStore = require('connect-mongo')
 
-// MongoDB connection
+// encryption modules
+const bcrypt = require('bcrypt')
+
+// web token modules
+const jwt = require('express-jwt')
+const jwtDecode = require('jwt-decode')
+
+// local components
+const User = require('./data/User')
+const { userInfo } = require('os')
+const {
+    createToken,
+    hashPassword,
+    verifyPassword
+  } = require('./util');
+  
+
+// MongoDB client object
 const client = new MongoClient(CONNECTION_STRING, {
     serverApi: {
         version: ServerApiVersion.v1,
@@ -28,20 +48,22 @@ const client = new MongoClient(CONNECTION_STRING, {
 // connection establish and log error or success
 async function run() {
     try {
-      // Connect the client to the server	(optional starting in v4.7)
+      // Connect the client to the server
       await client.connect();
       // Send a ping to confirm a successful connection
       await client.db("admin").command({ ping: 1 });
-      console.log("Pinged your deployment. You successfully connected to MongoDB!");
+      console.log("Pinged your deployment. You successfully connected to MongoDB!")
     }catch(error){
         console.error(error)
     }
   }
-  run().catch(console.dir);
+  run().catch(console.dir)
+
 // database variable declared empty globally
-let db = client.db('resGen')
+let db = ''
 let users = {}
 
+// session storage on mongo
 const sessionStore = MongoStore.create({
     mongoUrl: `${CONNECTION_STRING}`,
     collectionName: "sessions",
@@ -50,15 +72,7 @@ const sessionStore = MongoStore.create({
 
 // global express middleware
 const app = express()
-    .use(express.json())
-    .use(cors({
-        credentials: true,
-       origin: FRONT_END
-    }))
-    .use(morgan('tiny'))
-app.set('view engine', "ejs")
-// session middleware
-app.use(
+.use(
     session({
       secret: SECRET, // Set a secret key for session signing (replace 'your-secret-key' with your own secret)
       resave: false, // Disable session resaving on each request
@@ -66,7 +80,7 @@ app.use(
       store: sessionStore,
       cookie: {
         sameSite: 'lax', // cross-site
-        secure: false, // Set to true if using HTTPS
+        secure: true, // Set to true if using HTTPS
         httpOnly: true, // Prevent client-side JavaScript from accessing cookies
         maxAge: 1000*60*30, // Session expiration time (in milliseconds)
         domain: FRONT_END,
@@ -74,14 +88,13 @@ app.use(
       },
     })
   )
-// session check middleware
-const isAuth = (req, res, next) => {
-    if(req.session.isAuth) {
-        next()
-    }else{
-        res.redirect('/login')
-    }
-}
+    .use(express.json())
+    .use(cors({
+        credentials: true,
+        origin: FRONT_END
+    }))
+    .use(morgan('tiny'))
+app.set('view engine', "ejs")
 
 
 // Multer middleware for file validation. 
@@ -131,6 +144,9 @@ const isAuth = (req, res, next) => {
     //   let data = await collection.find({}).toArray();
     //   res.json(data);
 
+
+// API endpoints
+// why not. a little fun html output in case someone navigates to my server url
 app.get("/", (req, res) => {
     res.send("What are you doing here?\nI didn't want you to see me naked!")
 })
@@ -140,68 +156,93 @@ app.post('/registration', async (req, res) => {
     const db = client.db('resGen')
     const collection = db.collection('users')
     try {
+        // map request body elements to valiables for readability. 
+        const {firstName, lastName, email, username, password} = req.body
+        // Hash the password before saving in the database
+        const hashedPassword =  await bcrypt.hash(password, 10)
+        // store to object
+        const user = {
+            firstName,
+            lastName,
+            username,
+            password: hashedPassword,
+            email: email.toLowerCase()
+        }
         // look for a username and email corresponding with the ones in the request body
         // if exists, reject registration
-        const existingUser = await collection.findOne({ username: req.body.username })
-        const existingEmail = await collection.findOne({ email: req.body.email })
+        const existingUser = await collection.findOne({ username: username })
+        const existingEmail = await collection.findOne({ email: email })
         if (existingUser) {
-            return res.status(400).json({ message: 'User already exists' })
+            return res.status(400).json({ message: 'User already exists.' })
         } else if (existingEmail) {
-            return res.status(400).json({ message: 'this Email is already in use.' })
+            return res.status(400).json({ message: 'Email already in use.' })
         }
-        // Hash the password before saving in the database
-        const hashedPassword =  await bcrypt.hash(req.body.password, 10)
-        // create user object to pass to db
-        const user = {
-            username: req.body.username,
-            password: hashedPassword,
-            email: req.body.email
+        // insert new user into the user db collection
+        let newUser = await collection.insertOne(user)
+        // token and expiry timestamp
+        const token = createToken(newUser)
+        const decodedToken = jwtDecode(token)
+        const expiresAt = decodedToken.exp
+        // json user info to return
+        const userInfo = {
+            firstName,
+            lastName,
+            email
         }
-        let result = await collection.insertOne(user);
-        res.status(201).json({ message: 'User created', userId: result.insertedId })
-        req.session.user = {
-            id: result.insertedId,
-            username: req.body.username
-        };
+        req.session.isAuth = true
+        // console.log(req.session)
+        // console.log(newUser.insertedId.toString())
+        res.header('Access-Control-Allow-Origin', FRONT_END);
+        res.header('Access-Control-Allow-Credentials', 'true');
+        res.cookie("session", newUser.insertedId.toString(), JSON.stringify(req.session.cookie))
+        // return to the front end
+        console.log(res.cookie)
+        return res.status(200).json({ 
+            message: 'User created'
+        })
     } catch (error) {
         console.error(error)
-        res.status(500).json({ message: 'app error', error })
+        res.status(500).json({ message: 'OH NO! something went wrong!', error })
     }
 })
  
 app.post('/login', async (req, res) => {
-    console.log("session:", req.session.Session)
-    const db = client.db('resGen')
-    const collection = db.collection('users') 
-    const document = req.body
-    console.log(document)
-    const hashedPassword = await bcrypt.hash(req.body.password, 10)
-    const existingUser = await collection.findOne({ 
-        username: document.username
-    })
-    if (!existingUser) {
-        return res.status(400).json({ message: 'Incorrect Uname' })
-    }
-    const correctPass = await bcrypt.compare(document.password, existingUser.password)
-    if (!correctPass) {
-        return res.status(400).json({ message: 'Incorrect Password' })
-    } else {
-        req.session.isAuth = true
-        res.header('Access-Control-Allow-Origin', FRONT_END);
-        res.header('Access-Control-Allow-Credentials', 'true');
-            res.cookie("session", existingUser._id.toString(), JSON.stringify(req.sessionSession..cookie))
+    let db = client.db('resGen')
+    let collection = db.collection('users') 
+    try {
+        const {username, password} = req.body
+        // check to see if usename in database
+        const existingUser = await collection.findOne({ 
+            username: username
+        })
+        // obscure rejection
+        if (!existingUser) {
+            return res.status(403).json({
+                message: 'invalid credentials' 
+            })
+        }
+        // password check using bcrypt
+        const correctPass = await bcrypt.compare(password, existingUser.password)
+        // obscure rejection
+        if (!correctPass) {
+            return res.status(403).json({ message: 'invalid credentials' })
+        } else {
+
+            req.session.isAuth = true
+            console.log(req.session)
+
+            res.header('Access-Control-Allow-Origin', FRONT_END);
+            res.header('Access-Control-Allow-Credentials', 'true');
+            res.cookie("session", existingUser._id.toString(), JSON.stringify(req.session.cookie))
             return res.status(200).json({
                 message: "Login Successful"
             })
         }
     }catch (error){
         console.error(error)
-    }
+    } 
 })
 
-app.get('/main', isAuth, (req, res) => {
-    res.render("main")
-})
 
 app.post('/historyPost', async (req, res) => {
     const db = client.db('resGen')
@@ -209,7 +250,6 @@ app.post('/historyPost', async (req, res) => {
     // document['"date"'] = new Date(document.date)
     console.log("ID Here:", req.headers.id)
     const collection = db.collection('history')
-
     try {
         await collection.insertOne(document)
         res.json({ message: 'History data stored successfully' })
@@ -223,6 +263,7 @@ app.get('/historyGet', async (req, res) => {
     const db = client.db('resGen');
     try {
         const collection = db.collection('history');
+
         const data = await collection.find({userid: req.headers.id}).toArray();
         res.json(data);
     } catch (error) {
