@@ -1,12 +1,11 @@
 // environment variable declaration n shit. DOTENC mod only for local env. fallbacks in case.
 require('dotenv').config()
 const EXPRESS_PORT = process.env.PORT || 8000
-const HTTP_PORT = process.env.WS_PORT 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 const SECRET = process.env.SECRET
 const CONNECTION_STRING = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017"
 const FRONT_END = process.env.FRONT_END || "http://localhost:3000"
-console.log(`key${CONNECTION_STRING}\n${EXPRESS_PORT}\n${HTTP_PORT}\nSECRET: ${SECRET}\n${FRONT_END}`)
+console.log(`key${CONNECTION_STRING}\n${EXPRESS_PORT}\nSECRET: ${SECRET}\n${FRONT_END}`)
 
 // 
 const multer = require('multer')
@@ -339,7 +338,7 @@ app.post('/completions', async (req, res) => {
 // });
 
 // io.listen(8002);
-// app.listen(EXPRESS_PORT, () => console.log(`Listening on ${EXPRESS_PORT}`));
+app.listen(EXPRESS_PORT, () => console.log(`Listening on ${EXPRESS_PORT}`));
 
 // GPT suggestions:
 // Readability: The code is readable and follows a consistent coding style with proper indentation and naming conventions. The use of separate sections for different functionality (e.g., server setup, routes, ws connection) improves code organization.
