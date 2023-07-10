@@ -257,6 +257,8 @@ app.post('/logout', async (req, res) => {
         let split = cookie.split("=")
         let cookieName = split[0]
         console.log(cookieName)
+        res.header('Access-Control-Allow-Origin', FRONT_END);
+        res.header('Access-Control-Allow-Credentials', 'true');
         res.clearCookie(cookieName, {
             proxy: true,
             sameSite: 'none', // cross-site
