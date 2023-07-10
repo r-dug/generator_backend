@@ -8,6 +8,9 @@ const CONNECTION_STRING = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017"
 const FRONT_END = process.env.FRONT_END || "http://localhost:3000"
 console.log(`key${CONNECTION_STRING}\n${EXPRESS_PORT}\n${HTTP_PORT}\nSECRET: ${SECRET}\n${FRONT_END}`)
 
+// 
+const multer = require('multer')
+
 // express modules
 const express = require('express')
 const path = require('path');
@@ -28,8 +31,6 @@ const jwt = require('express-jwt')
 const jwtDecode = require('jwt-decode')
 
 // local components
-// const User = require('./data/User')
-// const { userInfo } = require('os')
 const {
     createToken,
     hashPassword,
@@ -98,21 +99,20 @@ const app = express()
     .use(morgan('tiny'))
 
 // Multer middleware for file validation. 
-// const upload = multer({
-//     dest: 'uploads/', // Temporary storage location
-//     fileFilter: (req, file, cb) => {
-//       // Validate file type
-//       if (file.mimetype == 'text/plain' || file.mimetype == 'application/pdf' || file.mimetype == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-//         // Accept file
-//         cb(null, true);
-//       } else {
-//         // Reject file
-//         cb(null, false);
-//         cb(new Error('Only .txt, .pdf and .docx format allowed!'));
-//       }
-//     }
-//   });
-  
+const upload = multer({
+    dest: 'uploads/', // Temporary storage location
+    fileFilter: (req, file, cb) => {
+      // Validate file type
+      if (file.mimetype == 'text/plain' || file.mimetype == 'application/pdf' || file.mimetype == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+        // Accept file
+        cb(null, true)
+      } else {
+        // Reject file
+        cb(null, false)
+        cb(new Error('Only .txt, .pdf and .docx format allowed!'))
+      }
+    }})
+
 // request paths
 // Route to handle file upload
 // server.post('/upload', upload.single('file'), (req, res) => {
@@ -179,13 +179,7 @@ app.post('/registration', async (req, res) => {
         }
         // insert new user into the user db collection
         let newUser = await collection.insertOne(user)
-        // // token and expiry timestamp
-        // const token = createToken(newUser)
-        // const decodedToken = jwtDecode(token)
-        // const expiresAt = decodedToken.exp
 
-
-        // req.session.isAuth = true
         console.log(req.session)
         console.log(newUser.insertedId.toString())
         res.header('Access-Control-Allow-Origin', FRONT_END);
@@ -246,6 +240,15 @@ app.post('/login', async (req, res) => {
                 domain: process.env.COOKIE_ALLOW,
                 path: "/"
             })
+            res.cookie("session2", existingUser._id.toString(), {
+                proxy: true,
+                sameSite: 'none', // cross-site
+                secure: true, // Set to true if using HTTPS
+                httpOnly: false, // Prevent client-side JavaScript from accessing cookies
+                maxAge: 60*30*1000, // Session expiration time (in milliseconds)
+                domain: process.env.COOKIE_ALLOW,
+                path: "/"
+            })
             return res.status(200).json({
                 message: "Login Successful"
             })
@@ -253,6 +256,27 @@ app.post('/login', async (req, res) => {
     }catch (error){
         console.error(error)
     } 
+})
+app.post('/logout', async (req, res) => {
+    console.log(req.headers.cookies)
+    let cookies = req.headers.cookies.split(';')
+    for (let cookie of cookies) { 
+        console.log(cookie)
+        let split = cookie.split("=")
+        let cookieName = split[0]
+        console.log(cookieName)
+        res.cookie(cookieName, "", {
+            proxy: true,
+            sameSite: 'none', // cross-site
+            secure: true, // Set to true if using HTTPS
+            httpOnly: false, // Prevent client-side JavaScript from accessing cookies
+            maxAge: 0, // Session expiration time (in milliseconds)
+            domain: process.env.COOKIE_ALLOW,
+            path: "/"
+        })}
+    return res.json({
+        message: "logout Successful"
+    })
 })
 
 
@@ -310,43 +334,21 @@ app.post('/completions', async (req, res) => {
         console.log(`these were your options: ${options}`)
     }
 })
+// socket configuration
+const { Server } = require("socket.io");
 
+const io = new Server({ /* options */ });
+
+io.on("connection", (socket) => {
+  // ...
+  console.log("connection made")
+});
+
+io.listen(8002);
 app.listen(EXPRESS_PORT, () => console.log(`Listening on ${EXPRESS_PORT}`));
 
-// const { Server } = require('ws')
-// const wss = new Server({ app })
-// wss.on('connection', (ws) => {
-//     console.log('A connection has been made');
-  
-//     // Event listener for the 'login' event
-//     ws.on('login', (userId) => {
-//         console.log(`User ${userId} logged in`);
-        // users[userId] = ws; // Associate this ws with the user
 
-        // // Example code for watching changes in a MongoDB collection
-        // const userIdHex = new ObjectId(userId); // Convert userId to ObjectId
-        // // console.log(userIdHex)
-        // // Replace 'historyCollection' with your actual collection name
-        // const historyCollection = db.collection('history');
-        // // console.log(historyCollection)
-        // // Start listening to changes
-        // const changeStream = historyCollection.watch({ $match: { 'fullDocument.userId': userIdHex } });
 
-        // changeStream.on('change', (change) => {
-        //     console.log(`Detected change in ${userId}'s history:`, change);
-        //     // Emit the change to the client
-        //     ws.emit('historyChange', change);
-        //     });
-    
-        // Clean up the change stream when user disconnects
-//         ws.on('logout', (userId) => {
-//             console.log(`User ${userId} disconnected`);
-//             changeStream.close();
-//             delete users[userId]; // Remove this user's ws
-//             });
-//         ws.on('close', () => console.log('Client disconnected'))
-//     });
-//   });
 
 // GPT suggestions:
 // Readability: The code is readable and follows a consistent coding style with proper indentation and naming conventions. The use of separate sections for different functionality (e.g., server setup, routes, ws connection) improves code organization.
