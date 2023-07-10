@@ -257,7 +257,15 @@ app.post('/logout', async (req, res) => {
         console.log(cookieName)
         res.header('Access-Control-Allow-Origin', FRONT_END);
         res.header('Access-Control-Allow-Credentials', 'true');
-        res.clearCookie(cookieName)}
+        res.clearCookie(cookieName, {
+            proxy: true,
+            sameSite: 'none', // cross-site
+            secure: true, // Set to true if using HTTPS
+            httpOnly: false, // Prevent client-side JavaScript from accessing cookies
+            maxAge: 0, // Session expiration time (in milliseconds)
+            domain: process.env.COOKIE_ALLOW,
+            path: "/"
+        })}
     }catch (error){
         console.error(error)
     }
