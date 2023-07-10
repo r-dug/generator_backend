@@ -269,7 +269,7 @@ app.post('/logout', async (req, res) => {
     }catch (error){
         console.error(error)
     }
-    return res.send("logout Successful")
+    return res.send({message:"logout Successful"})
 })
 
 
