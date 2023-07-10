@@ -252,7 +252,8 @@ app.post('/login', async (req, res) => {
 app.post('/logout', async (req, res) => {
     console.log(req.headers.cookies)
     let cookies = req.headers.cookies.split(';')
-    for (let cookie of cookies) { 
+    try{
+        for (let cookie of cookies) { 
         console.log(cookie)
         let split = cookie.split("=")
         let cookieName = split[0]
@@ -266,6 +267,9 @@ app.post('/logout', async (req, res) => {
             domain: process.env.COOKIE_ALLOW,
             path: "/"
         })}
+    }catch (error){
+        console.error(error)
+    }
     return res.send("logout Successful")
 })
 
