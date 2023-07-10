@@ -274,9 +274,7 @@ app.post('/logout', async (req, res) => {
             domain: process.env.COOKIE_ALLOW,
             path: "/"
         })}
-    return res.json({
-        message: "logout Successful"
-    })
+    return res.status(200).send("logout Successful")
 })
 
 
@@ -346,9 +344,6 @@ io.on("connection", (socket) => {
 
 io.listen(8002);
 app.listen(EXPRESS_PORT, () => console.log(`Listening on ${EXPRESS_PORT}`));
-
-
-
 
 // GPT suggestions:
 // Readability: The code is readable and follows a consistent coding style with proper indentation and naming conventions. The use of separate sections for different functionality (e.g., server setup, routes, ws connection) improves code organization.
