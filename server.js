@@ -149,7 +149,6 @@ const upload = multer({
 app.get("/", (req, res) => {
     res.send("What are you doing here?\nI didn't want you to see me naked!")
 })
-
 app.post('/registration', async (req, res) => {
     // our database and collection as variables
     const db = client.db('resGen')
@@ -202,7 +201,6 @@ app.post('/registration', async (req, res) => {
         res.status(500).json({ message: 'OH NO! something went wrong!', error })
     }
 })
- 
 app.post('/login', async (req, res) => {
     let db = client.db('resGen')
     let collection = db.collection('users') 
@@ -259,22 +257,12 @@ app.post('/logout', async (req, res) => {
         console.log(cookieName)
         res.header('Access-Control-Allow-Origin', FRONT_END);
         res.header('Access-Control-Allow-Credentials', 'true');
-        res.clearCookie(cookieName, {
-            proxy: true,
-            sameSite: 'none', // cross-site
-            secure: true, // Set to true if using HTTPS
-            httpOnly: false, // Prevent client-side JavaScript from accessing cookies
-            maxAge: 0, // Session expiration time (in milliseconds)
-            domain: process.env.COOKIE_ALLOW,
-            path: "/"
-        })}
+        res.clearCookie(cookieName)}
     }catch (error){
         console.error(error)
     }
     return res.send({message:"logout Successful"})
 })
-
-
 app.post('/historyPost', async (req, res) => {
     const db = client.db('resGen')
     const document = req.body
@@ -301,7 +289,6 @@ app.get('/historyGet', async (req, res) => {
         res.status(500).json({ error: error.toString() });
     }
 })
-
 // this should maybe be in a seperate class than any tasks that have to do with the database. maybe an externalApi class or something
 app.post('/completions', async (req, res) => {
     const options = {
