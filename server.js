@@ -240,15 +240,7 @@ app.post('/login', async (req, res) => {
                 domain: process.env.COOKIE_ALLOW,
                 path: "/"
             })
-            res.cookie("session2", existingUser._id.toString(), {
-                proxy: true,
-                sameSite: 'none', // cross-site
-                secure: true, // Set to true if using HTTPS
-                httpOnly: false, // Prevent client-side JavaScript from accessing cookies
-                maxAge: 60*30*1000, // Session expiration time (in milliseconds)
-                domain: process.env.COOKIE_ALLOW,
-                path: "/"
-            })
+
             return res.status(200).json({
                 message: "Login Successful"
             })
@@ -265,7 +257,7 @@ app.post('/logout', async (req, res) => {
         let split = cookie.split("=")
         let cookieName = split[0]
         console.log(cookieName)
-        res.cookie(cookieName, "", {
+        res.clearCookie(cookieName, {
             proxy: true,
             sameSite: 'none', // cross-site
             secure: true, // Set to true if using HTTPS
@@ -274,7 +266,7 @@ app.post('/logout', async (req, res) => {
             domain: process.env.COOKIE_ALLOW,
             path: "/"
         })}
-    return res.status(200).send("logout Successful")
+    return res.send("logout Successful")
 })
 
 
@@ -333,17 +325,17 @@ app.post('/completions', async (req, res) => {
     }
 })
 // socket configuration
-const { Server } = require("socket.io");
+// const { Server } = require("socket.io");
 
-const io = new Server({ /* options */ });
+// const io = new Server({ /* options */ });
 
-io.on("connection", (socket) => {
-  // ...
-  console.log("connection made")
-});
+// io.on("connection", (socket) => {
+//   // ...
+//   console.log("connection made")
+// });
 
-io.listen(8002);
-app.listen(EXPRESS_PORT, () => console.log(`Listening on ${EXPRESS_PORT}`));
+// io.listen(8002);
+// app.listen(EXPRESS_PORT, () => console.log(`Listening on ${EXPRESS_PORT}`));
 
 // GPT suggestions:
 // Readability: The code is readable and follows a consistent coding style with proper indentation and naming conventions. The use of separate sections for different functionality (e.g., server setup, routes, ws connection) improves code organization.
