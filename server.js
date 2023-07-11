@@ -1,21 +1,17 @@
-// environment variable declaration n shit. DOTENC mod only for local env. fallbacks in case.
+// environment variable declaration n shit. 
+// DOTENC mod only for local env. fallbacks in case.
 require('dotenv').config()
 const EXPRESS_PORT = process.env.PORT || 8000
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 const SECRET = process.env.SECRET
 const CONNECTION_STRING = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017"
 const FRONT_END = process.env.FRONT_END || "http://localhost:3000"
-console.log(`key${CONNECTION_STRING}\n${EXPRESS_PORT}\nSECRET: ${SECRET}\n${FRONT_END}`)
-
-// 
-const multer = require('multer')
+console.log(`key${CONNECTION_STRING}\nExpress port: ${EXPRESS_PORT}\nTalking to: ${FRONT_END}`)
 
 // express modules
 const express = require('express')
-const path = require('path');
 const session = require('express-session')
 const cors = require('cors')
-const bodyParser = require('body-parser')
 const morgan = require('morgan')
 
 // Mongo Modules
@@ -25,17 +21,10 @@ const MongoStore = require('connect-mongo')
 // encryption modules
 const bcrypt = require('bcrypt')
 
-// web token modules
-const jwt = require('express-jwt')
-const jwtDecode = require('jwt-decode')
-
-// local components
-const {
-    createToken,
-    hashPassword,
-    verifyPassword
-  } = require('./util');
-  
+// local imports
+const fetchAndParse = require('./util/scraper.js')
+const validateUrl = require('./util/UrlCheck.js')
+const jobDescription = require('./util/GetJobDescription')
 
 // MongoDB client object
 const client = new MongoClient(CONNECTION_STRING, {
@@ -45,7 +34,7 @@ const client = new MongoClient(CONNECTION_STRING, {
         deprecationErrors: true,
       }
 })
-// connection establish and log error or success
+// MongoDB connection establishment
 async function run() {
     try {
       // Connect the client to the server
@@ -73,8 +62,7 @@ const sessionStore = MongoStore.create({
 // global express middleware
 const app = express()
     .set("trust proxy", 1)
-    .use(
-        session({
+    .use(session({
             store: sessionStore,
             proxy: true,
             secret: SECRET, // Set a secret key for session signing (replace 'your-secret-key' with your own secret)
@@ -89,59 +77,13 @@ const app = express()
                 maxAge: 1000*60*30, // Session expiration time (in milliseconds)
                 domain: process.env.COOKIE_ALLOW,
                 path: "/"
-            }}))
+    }}))
     .use(express.json())
     .use(cors({
         credentials: true,
         origin: FRONT_END
     }))
     .use(morgan('tiny'))
-
-// Multer middleware for file validation. 
-const upload = multer({
-    dest: 'uploads/', // Temporary storage location
-    fileFilter: (req, file, cb) => {
-      // Validate file type
-      if (file.mimetype == 'text/plain' || file.mimetype == 'application/pdf' || file.mimetype == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-        // Accept file
-        cb(null, true)
-      } else {
-        // Reject file
-        cb(null, false)
-        cb(new Error('Only .txt, .pdf and .docx format allowed!'))
-      }
-    }})
-
-// request paths
-// Route to handle file upload
-// server.post('/upload', upload.single('file'), (req, res) => {
-//     if (!req.file) {
-//       // No file was uploaded, or wrong file type
-//       return res.status(400).send('Invalid file type. Only .png, .jpg and .jpeg are allowed');
-//     }
-  
-//     // File was uploaded & validated. Now we insert its data into the MongoDB database.
-//     const fileData = {
-//       originalName: req.file.originalname,
-//       mimeType: req.file.mimetype,
-//       size: req.file.size,
-//       path: req.file.path,
-//       uploadDate: new Date(),
-//     }
-  
-//     db.collection('uploads').insertOne(fileData, (err, result) => {
-//       if (err) {
-//         console.error('Error inserting document into MongoDB', err);
-//         return res.status(500).send('Error occurred while saving file data')
-//       }
-  
-//       console.log('Successfully inserted document into MongoDB', result);
-//       res.send('File uploaded and data stored successfully')
-//     })
-//     })
-
-    //   let data = await collection.find({}).toArray();
-    //   res.json(data);
 
 
 // API endpoints
@@ -297,7 +239,9 @@ app.get('/historyGet', async (req, res) => {
         res.status(500).json({ error: error.toString() });
     }
 })
-// this should maybe be in a seperate class than any tasks that have to do with the database. maybe an externalApi class or something
+app.post('/handleFile', async (req, res) => {
+    console.log(req)
+})
 app.post('/completions', async (req, res) => {
     const options = {
         method: "POST",
@@ -324,6 +268,14 @@ app.post('/completions', async (req, res) => {
         console.log(`these were your options: ${options}`)
     }
 })
+// this is a reconstruction of the input handling and 
+// subsequent api requests to gpt for completions
+app.post('/completions2', async (req, res) => {
+    // top level vars for 
+    
+    const job = jobDescription(req, OPENAI_API_KEY)
+    console.log(job)
+})
 // socket configuration
 // const { Server } = require("socket.io");
 
@@ -337,25 +289,3 @@ app.post('/completions', async (req, res) => {
 // io.listen(8002);
 app.listen(EXPRESS_PORT, () => console.log(`Listening on ${EXPRESS_PORT}`));
 
-// GPT suggestions:
-// Readability: The code is readable and follows a consistent coding style with proper indentation and naming conventions. The use of separate sections for different functionality (e.g., server setup, routes, ws connection) improves code organization.
-
-// Performance improvements:
-
-//     Connection Handling: The ws.io connection is established inside the io.on('connection') event listener. It's important to note that the event listener is invoked for each new connection. To avoid creating multiple connections for each user, you should move the socket connection setup outside of the event listener to ensure a single connection is used.
-
-//     Database Connection: Currently, the database connection is established twice: once using client.connect and then again using client.db. You can remove the first client.connect call since the connection is already established when creating the MongoClient instance.
-
-//     Error Handling: Error handling in the route handlers could be improved. Instead of console logging the error and sending a generic error response, you can provide more specific error messages and appropriate HTTP status codes based on the error type.
-
-//     Environment Configuration: Instead of hardcoding the server URL (http://localhost:3000) and MongoDB connection details (mongodb://127.0.0.1:27017), consider using environment variables or configuration files to make these values configurable based on the deployment environment.
-
-//     Middleware Usage: The body-parser middleware is not required in Express 4.16+ as it is included by default. You can remove the line app.use(bodyParser.json()).
-
-//     File Upload: The code related to file upload using Multer is commented out. If file upload functionality is required, you can uncomment and configure it appropriately.
-
-//     Error Handling Middleware: It would be beneficial to add an error handling middleware to handle any uncaught errors and provide appropriate responses to the client.
-
-//     Security: Consider implementing security measures such as input validation, sanitization, and user authentication/authorization depending on your application's requirements.
-
-// These are general suggestions, and the actual performance improvements will depend on the specific requirements and performance bottlenecks of your application.
