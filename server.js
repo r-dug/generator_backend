@@ -252,7 +252,7 @@ app.post('/completions', async (req, res) => {
         body: JSON.stringify({
             model:"gpt-3.5-turbo",
             messages: [{role:"system",content:"You are to respond to requests for polished resume's and cover letters, helping job seekers match these documents to job descriptions they also provide you."},{role: "user", content: req.body.prompt}],
-            temperature: 0.1,
+            temperature: 0.5,
             max_tokens: 2000,
         })
     }
