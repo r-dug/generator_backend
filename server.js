@@ -48,10 +48,6 @@ async function run() {
   }
   run().catch(console.dir)
 
-// database variable declared empty globally
-let db = ''
-let users = {}
-
 // session storage on mongo
 const sessionStore = MongoStore.create({
     mongoUrl: `${CONNECTION_STRING}`,
@@ -73,7 +69,7 @@ const app = express()
                 proxy: true,
                 sameSite: 'none', // cross-site
                 secure: true, // Set to true if using HTTPS
-                httpOnly: false, // Prevent client-side JavaScript from accessing cookies
+                httpOnly: true, // Prevent client-side JavaScript from accessing cookies
                 maxAge: 1000*60*30, // Session expiration time (in milliseconds)
                 domain: process.env.COOKIE_ALLOW,
                 path: "/"
