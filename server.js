@@ -135,7 +135,7 @@ app.post('/registration', async (req, res) => {
             message: 'User created'
         })
     } catch (error) {
-        console.error(error)
+        console.error("we were unable to connect to the database...")
         res.status(500).json({ message: 'OH NO! something went wrong!', error })
     }
 })
